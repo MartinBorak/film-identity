@@ -75,7 +75,13 @@ const linked = await filmResolver.linkFilms(films)
 linked[0].catalogueIds.P2529 // the ČSFD id, where Wikidata states one
 ```
 
-`fetchFilmLinks` returns those ids alone, keyed by TMDB id; `fetchTmdbFilm` and `fetchWikidataFilm` fetch one film by an id a person settled on.
+Films no id reaches, typically new releases Wikidata describes before anyone states an id on them, can be paired by hand: pass a map from TMDB id to Wikidata item as the second argument, and that item is read instead of searching by title.
+
+```ts
+const linked = await filmResolver.linkFilms(films, new Map([[1671297, 'Q139495672']]))
+```
+
+`fetchFilmLinks` takes the same arguments and returns those ids alone, keyed by TMDB id; `fetchTmdbFilm` and `fetchWikidataFilm` fetch one film by an id a person settled on.
 
 The configuration is per market (language, region, where the cinemas are), so a program covering several markets creates a resolver for each.
 

@@ -18,10 +18,16 @@ export type FilmResolver = {
   identify: (listing: Listing) => Promise<FilmMatch>
   /** Identifies many listings at once, keyed by title; titles of the same film share one match. */
   identifyAll: (listings: Listing[]) => Promise<Map<string, FilmMatch>>
-  /** Fills in each film's Wikidata, IMDb and further catalogue ids where Wikidata has them. */
-  linkFilms: (films: Film[]) => Promise<Film[]>
+  /**
+   * Fills in each film's Wikidata, IMDb and further catalogue ids where Wikidata has them.
+   * `knownItems` pairs a TMDB id with the item a person found for a film no id reaches.
+   */
+  linkFilms: (films: Film[], knownItems?: ReadonlyMap<number, string>) => Promise<Film[]>
   /** Looks up the Wikidata ids for films without changing them, keyed by TMDB id. */
-  fetchFilmLinks: (films: Film[]) => Promise<Map<number, WikidataLinks>>
+  fetchFilmLinks: (
+    films: Film[],
+    knownItems?: ReadonlyMap<number, string>,
+  ) => Promise<Map<number, WikidataLinks>>
   /** Fetches a film from TMDB by its id. */
   fetchTmdbFilm: (tmdbId: number) => Promise<Film>
   /** Fetches a film from Wikidata by its item id. */
@@ -38,8 +44,8 @@ export function createFilmResolver(config: FilmIdentityConfig): FilmResolver {
   return {
     identify: (listing) => identifyOne(context, listing),
     identifyAll: (listings) => identifyMany(context, listings),
-    linkFilms: (films) => link(context, films),
-    fetchFilmLinks: (films) => fetchLinks(context, films),
+    linkFilms: (films, knownItems) => link(context, films, knownItems),
+    fetchFilmLinks: (films, knownItems) => fetchLinks(context, films, knownItems),
     fetchTmdbFilm: async (tmdbId) => toFilm(await fetchTmdbMovie(context, tmdbId)),
     fetchWikidataFilm: (wikidataId) => fetchFromWikidata(context, wikidataId),
   }

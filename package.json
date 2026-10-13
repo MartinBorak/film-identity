@@ -9,17 +9,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "pnpm build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

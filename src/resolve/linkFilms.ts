@@ -1,4 +1,5 @@
 import {
+  fetchWikidataFilm,
   fetchWikidataLinksByImdbId,
   fetchWikidataLinksByTmdbId,
   type WikidataLinks,
@@ -90,12 +91,33 @@ async function fetchLinksBySearch(
 }
 
 /**
+ * Reads the links from the item a person paired each film with, keyed by TMDB id.
+ */
+async function fetchKnownLinks(
+  context: Context,
+  lookups: Lookup[],
+  knownItems: ReadonlyMap<number, string>,
+): Promise<Map<number, WikidataLinks>> {
+  const paired = lookups
+    .map(({ tmdbId }) => [tmdbId, knownItems.get(tmdbId)] as const)
+    .filter((pair): pair is readonly [number, string] => pair[1] !== undefined)
+  const read = await Array.fromAsync(paired, async ([tmdbId, wikidataId]) => {
+    const { catalogueIds, imdbId } = await fetchWikidataFilm(context, wikidataId)
+
+    return [tmdbId, { wikidataId, imdbId, catalogueIds }] as const
+  })
+
+  return new Map(read)
+}
+
+/**
  * Looks up each film's Wikidata links, keyed by TMDB id, joining on the TMDB id, then the IMDb id,
- * then a name search.
+ * then the item a person paired it with, then a name search.
  */
 export async function fetchFilmLinks(
   context: Context,
   films: Film[],
+  knownItems: ReadonlyMap<number, string> = new Map(),
 ): Promise<Map<number, WikidataLinks>> {
   const lookups = [
     ...new Map(
@@ -114,19 +136,30 @@ export async function fetchFilmLinks(
     context,
     lookups.filter(({ tmdbId }) => !found.has(tmdbId)),
   )
-  const bySearch = await fetchLinksBySearch(
+  const known = await fetchKnownLinks(
     context,
     lookups.filter(({ tmdbId }) => !found.has(tmdbId) && !byImdbId.has(tmdbId)),
+    knownItems,
+  )
+  const bySearch = await fetchLinksBySearch(
+    context,
+    lookups.filter(
+      ({ tmdbId }) => !found.has(tmdbId) && !byImdbId.has(tmdbId) && !known.has(tmdbId),
+    ),
   )
 
-  return new Map([...found, ...byImdbId, ...bySearch])
+  return new Map([...found, ...byImdbId, ...known, ...bySearch])
 }
 
 /**
  * Fills in each film's Wikidata item and the catalogue ids that only Wikidata holds.
  */
-export async function linkFilms(context: Context, films: Film[]): Promise<Film[]> {
-  const links = await fetchFilmLinks(context, films)
+export async function linkFilms(
+  context: Context,
+  films: Film[],
+  knownItems?: ReadonlyMap<number, string>,
+): Promise<Film[]> {
+  const links = await fetchFilmLinks(context, films, knownItems)
 
   return films.map((film) =>
     withLinks(film, film.tmdbId === null ? undefined : links.get(film.tmdbId)),
