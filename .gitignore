@@ -1,0 +1,15 @@
+/node_modules
+/dist
+/coverage
+
+.DS_Store
+
+# env files
+.env*
+
+*.tsbuildinfo
+
+# private agent notes and settings
+CLAUDE.local.md
+.aidiff.jsonl
+.claude/settings.local.json

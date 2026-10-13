@@ -1,0 +1,73 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "gender": 2,
+      "id": 1198981,
+      "known_for_department": "Directing",
+      "name": "Edmunds Jansons",
+      "original_name": "Edmunds Jansons",
+      "popularity": 0.5224,
+      "profile_path": "/tByoLWFOhWOba2Rnas2pBxIwACr.jpg",
+      "known_for": [
+        {
+          "adult": false,
+          "backdrop_path": "/3AuV1Y9hcmwhjY3iybp3CWmbAM1.jpg",
+          "id": 474687,
+          "title": "Bize un Neguļa",
+          "original_title": "Bize un Neguļa",
+          "overview": "",
+          "poster_path": "/cs3ZrBZWzL5kEkYGtcMLzn2CSsj.jpg",
+          "media_type": "movie",
+          "original_language": "lv",
+          "genre_ids": [16, 10751],
+          "popularity": 1.1562,
+          "release_date": "2017-09-09",
+          "softcore": false,
+          "video": false,
+          "vote_average": 7.3,
+          "vote_count": 7
+        },
+        {
+          "adult": false,
+          "backdrop_path": "/j1JOubVqoyV8g76z0uBCisBq02.jpg",
+          "id": 580256,
+          "title": "Jacob, Mimmi a mluvící psi",
+          "original_title": "Jēkabs, Mimmi un runājošie suņi",
+          "overview": "Jakob žije ve městě a sní o tom, že se stejně jako jeho věčně zaneprázdněný táta stane architektem. V době, kdy je jeho otec v práci, Jakob kreslí budovy a sní. Když musí otec odjet na delší služební cestu než obvykle, Jacob je na týden poslán k rodině svéhlavé sestřenice jménem Mimmi. Po příjezdu zjistí, že na území místního parku chce chamtivý podnikatel postavit nové mrakodrapy. Jacob a Mimmi se rozhodnou jeho záměr překazit. Ukáže se ale, že bez smečky mluvících psů to nepůjde!",
+          "poster_path": "/8NvUC6JeRjyURyz0IgZd0AzRx5K.jpg",
+          "media_type": "movie",
+          "original_language": "lv",
+          "genre_ids": [10751, 16, 12],
+          "popularity": 1.4012,
+          "release_date": "2019-02-01",
+          "softcore": false,
+          "video": false,
+          "vote_average": 5.8,
+          "vote_count": 7
+        },
+        {
+          "adult": false,
+          "backdrop_path": "/4N7nJDQ8jkhLoD89P4X5DjgYigR.jpg",
+          "id": 429841,
+          "title": "Kora turneja",
+          "original_title": "Kora turneja",
+          "overview": "",
+          "poster_path": "/b0c5EOigrW0rbpubxunFDwIn91j.jpg",
+          "media_type": "movie",
+          "original_language": "lv",
+          "genre_ids": [16],
+          "popularity": 3.1373,
+          "release_date": "2012-12-21",
+          "softcore": false,
+          "video": false,
+          "vote_average": 5.7,
+          "vote_count": 3
+        }
+      ]
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}
