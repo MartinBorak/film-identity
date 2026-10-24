@@ -32,7 +32,7 @@
   "dependencies": {
     "fastest-levenshtein": "^1.0.16",
     "ky": "^2.2.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "sharp": "^0.35.0"
@@ -43,15 +43,15 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^24.13.6",
+    "@types/node": "^24.19.2",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-perfectionist": "^5.12.1",
-    "prettier": "^3.9.9",
+    "eslint-plugin-perfectionist": "^5.13.0",
+    "prettier": "^3.9.10",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.70.1",
-    "vitest": "^5.0.2"
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
   },
   "packageManager": "pnpm@11.20.0"
 }
