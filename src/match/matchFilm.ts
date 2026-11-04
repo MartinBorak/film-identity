@@ -107,7 +107,7 @@ function isByStatedDirector(film: FilmCandidate, directors: string[]): boolean {
  * Checks whether the printed director or year rules the film out.
  * Each check applies only when both the film and the cinema supply a value.
  */
-function contradictsStatement(film: FilmCandidate, evidence: FilmEvidence): boolean {
+export function contradictsStatement(film: FilmCandidate, evidence: FilmEvidence): boolean {
   const byDirector =
     evidence.directors.length > 0 &&
     film.directors.length > 0 &&

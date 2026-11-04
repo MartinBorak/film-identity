@@ -157,6 +157,29 @@ describe('identifyFilm', () => {
     expect(toRequestedPaths(fetchSpy)).toEqual(['/3/search/movie', '/3/movie/42'])
   })
 
+  // Cinemax printed Rob Savage's 2026 horror, and TMDB's only "Macocha" is a Polish short.
+  it('refuses a lone namesake whose full credits contradict the printed director', async () => {
+    stubCatalogues(
+      { Macocha: [{ id: 1499146, title: 'Macocha', directors: ['Adam Porębowicz'] }] },
+      {
+        'Rob Savage': [
+          {
+            id: 1,
+            name: 'Rob Savage',
+            directed: [{ id: 1400837, title: 'Other Mommy', releaseDate: '2026-10-30' }],
+          },
+        ],
+      },
+    )
+
+    const match = await identifyFilm(
+      context,
+      screenedIn('Macocha', 2026, { productionYears: [2026], directors: ['Rob Savage'] }),
+    )
+
+    expect(match).toMatchObject({ evidence: 'director', film: { tmdbId: 1400837 } })
+  })
+
   // TMDB knows the film only as the Latvian "Laimīgie", so the Slovak title finds nothing.
   it('resolves a title only the cinema’s director reaches', async () => {
     stubCatalogues(

@@ -18,6 +18,7 @@ import {
 } from '../catalogues/tmdb.js'
 import type { Context } from '../config.js'
 import {
+  contradictsStatement,
   isCorroboratedBy,
   narrowToFilmsMadeAround,
   pickBestMatch,
@@ -84,7 +85,12 @@ async function matchSearchResults(
   const searchMatch = pickBestMatch(queryTitles, results.map(toSearchCandidate), evidence)
 
   if (searchMatch) {
-    return fetchTmdbMovie(context, searchMatch.tmdbId)
+    const movie = await fetchTmdbMovie(context, searchMatch.tmdbId)
+
+    // Search results carry no credits, so only the full film can contradict the printed director.
+    if (!contradictsStatement(toMovieCandidate(movie), evidence)) {
+      return movie
+    }
   }
 
   const movies = await Array.fromAsync(results.slice(0, FULL_TITLE_LOOKUP_LIMIT), (result) =>
