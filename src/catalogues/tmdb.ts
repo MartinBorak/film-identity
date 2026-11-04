@@ -36,15 +36,26 @@ export function buildTmdbSearchUrl(tmdbContext: TmdbContext, query: string): str
 }
 
 /**
- * Builds the address for a film's full details, with its translated and alternative titles and
- * its credits. Both title sets are needed: a neighbouring language's title can be in
- * `translations` but not in `alternative_titles`.
+ * Builds the address for a film's full details, with its translated and alternative titles.
+ * Both title sets are needed: a neighbouring language's title can be in `translations` but not
+ * in `alternative_titles`.
  */
 export function buildTmdbMovieUrl(tmdbContext: TmdbContext, movieId: number): string {
   return buildTmdbUrl(`/movie/${movieId}`, {
     language: tmdbContext.language,
-    append_to_response: 'translations,alternative_titles,credits',
+    append_to_response: 'translations,alternative_titles',
   })
+}
+
+// Where a language has no name for a person, TMDB falls back to their original script.
+const CREDITS_LANGUAGE = 'en-US'
+
+/**
+ * Builds the address for a film's credits, in English, so a Ukrainian director is "Yuliia
+ * Hontaruk" as listings print her rather than "Юлія Гонтарук".
+ */
+export function buildTmdbCreditsUrl(movieId: number): string {
+  return buildTmdbUrl(`/movie/${movieId}/credits`, { language: CREDITS_LANGUAGE })
 }
 
 /**
@@ -92,7 +103,12 @@ const tmdbSearchResultSchema = z.object({
 
 const tmdbSearchResponseSchema = z.object({ results: z.array(tmdbSearchResultSchema) })
 
-const tmdbMovieSchema = z.object({
+const tmdbCreditsSchema = z.object({
+  crew: z.array(z.object({ job: z.string(), name: z.string() })),
+  cast: z.array(z.object({ name: z.string(), order: z.number() })).default([]),
+})
+
+const tmdbMovieDetailsSchema = z.object({
   id: z.number(),
   title: z.string(),
   original_title: z.string(),
@@ -110,10 +126,6 @@ const tmdbMovieSchema = z.object({
     ),
   }),
   alternative_titles: z.object({ titles: z.array(z.object({ title: z.string() })) }),
-  credits: z.object({
-    crew: z.array(z.object({ job: z.string(), name: z.string() })),
-    cast: z.array(z.object({ name: z.string(), order: z.number() })).default([]),
-  }),
   genres: z.array(z.object({ id: z.number(), name: z.string() })),
 })
 
@@ -135,7 +147,9 @@ const tmdbCrewCreditSchema = z.object({
 const tmdbMovieCreditsResponseSchema = z.object({ crew: z.array(tmdbCrewCreditSchema) })
 
 export type TmdbSearchResult = z.infer<typeof tmdbSearchResultSchema>
-export type TmdbMovie = z.infer<typeof tmdbMovieSchema>
+export type TmdbMovie = z.infer<typeof tmdbMovieDetailsSchema> & {
+  credits: z.infer<typeof tmdbCreditsSchema>
+}
 export type TmdbPerson = z.infer<typeof tmdbPersonSchema>
 export type TmdbCrewCredit = z.infer<typeof tmdbCrewCreditSchema>
 
@@ -184,10 +198,15 @@ export async function fetchTmdbSearchResults(
 }
 
 /**
- * Fetches a film's full details from TMDB by its id.
+ * Fetches a film's full details and credits from TMDB by its id.
  */
 export async function fetchTmdbMovie(context: Context, movieId: number): Promise<TmdbMovie> {
-  return fetchTmdb(context, buildTmdbMovieUrl(context.tmdb, movieId), tmdbMovieSchema)
+  const [details, credits] = await Promise.all([
+    fetchTmdb(context, buildTmdbMovieUrl(context.tmdb, movieId), tmdbMovieDetailsSchema),
+    fetchTmdb(context, buildTmdbCreditsUrl(movieId), tmdbCreditsSchema),
+  ])
+
+  return { ...details, credits }
 }
 
 /**

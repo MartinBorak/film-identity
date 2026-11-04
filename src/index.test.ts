@@ -26,12 +26,15 @@ describe('createFilmResolver', () => {
     const slovakCalls = fetchSpy.mock.calls.length
     await czech.identify(screenedIn('Odysea', 2026))
 
-    const languages = fetchSpy.mock.calls.map(([input]) =>
-      toRequestUrl(input).searchParams.get('language'),
-    )
+    // Credits are asked for in English whatever the configured language.
+    const languages = fetchSpy.mock.calls
+      .map(([input]) => toRequestUrl(input))
+      .map((url) =>
+        url.pathname.endsWith('/credits') ? 'credits' : url.searchParams.get('language'),
+      )
 
-    expect(new Set(languages.slice(0, slovakCalls))).toEqual(new Set(['sk-SK']))
-    expect(new Set(languages.slice(slovakCalls))).toEqual(new Set(['cs-CZ']))
+    expect(new Set(languages.slice(0, slovakCalls))).toEqual(new Set(['sk-SK', 'credits']))
+    expect(new Set(languages.slice(slovakCalls))).toEqual(new Set(['cs-CZ', 'credits']))
   })
 
   it('throws a FilmLookupError naming TMDB when TMDB refuses', async () => {

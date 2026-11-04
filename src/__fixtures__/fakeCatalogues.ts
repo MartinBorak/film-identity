@@ -93,11 +93,15 @@ function toMovieBody(movie: FakeMovie): string {
       ],
     },
     alternative_titles: { titles: [] },
-    credits: {
-      crew: (movie.directors ?? []).map((name) => ({ job: 'Director', name })),
-      cast: (movie.cast ?? []).map((name, order) => ({ name, order })),
-    },
     genres: movie.genres ?? [],
+  })
+}
+
+function toMovieCreditsBody(movie: FakeMovie): string {
+  return JSON.stringify({
+    id: movie.id,
+    crew: (movie.directors ?? []).map((name) => ({ job: 'Director', name })),
+    cast: (movie.cast ?? []).map((name, order) => ({ name, order })),
   })
 }
 
@@ -220,10 +224,16 @@ function toResponse(
     return new Response(toCreditsBody(person))
   }
 
-  const movie = [
+  const movies = [
     ...Object.values(resultsByQuery).flat(),
     ...people.flatMap(({ directed }) => directed),
-  ].find(({ id }) => url.pathname === `/3/movie/${id}`)
+  ]
+  const movie = movies.find(({ id }) => url.pathname === `/3/movie/${id}`)
+  const creditedMovie = movies.find(({ id }) => url.pathname === `/3/movie/${id}/credits`)
+
+  if (creditedMovie) {
+    return new Response(toMovieCreditsBody(creditedMovie))
+  }
 
   return movie ? new Response(toMovieBody(movie)) : new Response('', { status: 404 })
 }

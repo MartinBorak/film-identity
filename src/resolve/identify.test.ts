@@ -154,7 +154,11 @@ describe('identifyFilm', () => {
       screenedIn('Odysea', 2026, { productionYears: [2026], directors: ['Christopher Nolan'] }),
     )
 
-    expect(toRequestedPaths(fetchSpy)).toEqual(['/3/search/movie', '/3/movie/42'])
+    expect(toRequestedPaths(fetchSpy)).toEqual([
+      '/3/search/movie',
+      '/3/movie/42',
+      '/3/movie/42/credits',
+    ])
   })
 
   // Cinemax printed Rob Savage's 2026 horror, and TMDB's only "Macocha" is a Polish short.
@@ -341,7 +345,11 @@ describe('identifyFilms', () => {
     expect(films.get('Klenoty žánrového filmu: HARRY POTTER A KAMEŇ MUDRCOV')?.film?.tmdbId).toBe(
       671,
     )
-    expect(toRequestedPaths(fetchSpy)).toEqual(['/3/search/movie', '/3/movie/671'])
+    expect(toRequestedPaths(fetchSpy)).toEqual([
+      '/3/search/movie',
+      '/3/movie/671',
+      '/3/movie/671/credits',
+    ])
   })
 
   it('pools what a group’s listings said before asking', async () => {

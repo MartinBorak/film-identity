@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { buildContext, toRequestHeaders } from '../__fixtures__/fakeCatalogues.js'
 import { FilmLookupError } from './errors.js'
 import {
+  buildTmdbCreditsUrl,
   buildTmdbMovieUrl,
   buildTmdbPersonCreditsUrl,
   buildTmdbPersonSearchUrl,
@@ -43,6 +44,23 @@ const context = buildContext()
 
 function stubTmdbResponse(body: string) {
   return vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(body, { status: 200 }))
+}
+
+// The saved responses carry their credits appended, which TMDB now serves on a path of their own.
+function stubTmdbMovieResponse(body: string) {
+  const { credits } = z.object({ credits: z.unknown() }).parse(JSON.parse(body))
+
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation((input) =>
+      Promise.resolve(
+        new Response(
+          String(input instanceof Request ? input.url : input).includes('/credits')
+            ? JSON.stringify(credits)
+            : body,
+        ),
+      ),
+    )
 }
 
 afterEach(() => {
@@ -91,12 +109,20 @@ describe('buildTmdbMovieUrl', () => {
     expect(url.searchParams.get('language')).toBe('sk-SK')
   })
 
-  it('appends the title sets and the credits rather than fetching them separately', () => {
+  it('appends the title sets rather than fetching them separately', () => {
     const url = new URL(buildTmdbMovieUrl(context.tmdb, 1288445))
 
-    expect(url.searchParams.get('append_to_response')).toBe(
-      'translations,alternative_titles,credits',
-    )
+    expect(url.searchParams.get('append_to_response')).toBe('translations,alternative_titles')
+  })
+})
+
+describe('buildTmdbCreditsUrl', () => {
+  // In Slovak, TMDB gives a name it holds no Slovak form of in the person's original script.
+  it('asks for a film’s credits in English, whatever the configured language', () => {
+    const url = new URL(buildTmdbCreditsUrl(1288445))
+
+    expect(url.origin + url.pathname).toBe('https://api.themoviedb.org/3/movie/1288445/credits')
+    expect(url.searchParams.get('language')).toBe('en-US')
   })
 })
 
@@ -200,7 +226,7 @@ describe('fetchTmdbSearchResults', () => {
 
 describe('fetchTmdbMovie', () => {
   it('reads a real film response', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
 
     const movie = await fetchTmdbMovie(context, 1288445)
 
@@ -214,7 +240,7 @@ describe('fetchTmdbMovie', () => {
   })
 
   it('accepts a film TMDB holds no poster for', async () => {
-    stubTmdbResponse(movieWithoutPosterFixture)
+    stubTmdbMovieResponse(movieWithoutPosterFixture)
 
     const movie = await fetchTmdbMovie(context, 1216353)
 
@@ -302,13 +328,13 @@ describe('toReleaseYear', () => {
 
 describe('toEnglishTitle', () => {
   it('reads a blank English translation as the original title', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
 
     expect(toEnglishTitle(await fetchTmdbMovie(context, 1288445))).toBe('Mutiny')
   })
 
   it('calls an untranslated film what it is called at home', async () => {
-    stubTmdbResponse(movieWithoutPosterFixture)
+    stubTmdbMovieResponse(movieWithoutPosterFixture)
 
     expect(toEnglishTitle(await fetchTmdbMovie(context, 1216353))).toBe(
       'Príbelská vzbura Janka Kráľa',
@@ -316,7 +342,7 @@ describe('toEnglishTitle', () => {
   })
 
   it('takes the first English entry that says anything', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
     const movie = await fetchTmdbMovie(context, 1288445)
 
     const inTwoCountries = {
@@ -333,7 +359,7 @@ describe('toEnglishTitle', () => {
   })
 
   it('ignores the translations that are not English', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
     const movie = await fetchTmdbMovie(context, 1288445)
 
     const czechOnly = {
@@ -347,7 +373,7 @@ describe('toEnglishTitle', () => {
 
 describe('toFilm', () => {
   it('takes the local title from the response and the English one from the translations', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
 
     expect(toFilm(await fetchTmdbMovie(context, 1288445))).toMatchObject({
       title: 'Vzbura',
@@ -361,7 +387,7 @@ describe('toFilm', () => {
 
 describe('toKnownTitles', () => {
   it('finds the cross-language title that only the translations carry', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
 
     const knownTitles = toKnownTitles(await fetchTmdbMovie(context, 1288445))
 
@@ -370,7 +396,7 @@ describe('toKnownTitles', () => {
   })
 
   it('drops the blank titles TMDB pads its translations with', async () => {
-    stubTmdbResponse(movieFixture)
+    stubTmdbMovieResponse(movieFixture)
 
     expect(toKnownTitles(await fetchTmdbMovie(context, 1288445))).not.toContain('')
   })
