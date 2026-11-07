@@ -40,8 +40,8 @@ export type SearchedItem = {
 
 /**
  * Tells whether a Wikidata search hit is the same film as ours.
- * A label must match one of the film's titles; year, TMDB id and director need agree only where
- * both sides state them.
+ * A label must match one of the film's titles and at least one of year, TMDB id and director must
+ * agree; none may contradict where both sides state it.
  */
 export function isSameFilm(item: SearchedItem, film: Film): boolean {
   const titles = [film.title, film.englishTitle, film.originalTitle].filter(isNonEmpty)
@@ -50,16 +50,26 @@ export function isSameFilm(item: SearchedItem, film: Film): boolean {
     titles.some((title) => titlesMatch(label, title)),
   )
   const isDatedAlike =
-    item.years.length === 0 ||
-    releaseYear === null ||
+    releaseYear !== null &&
     item.years.some((year) => Math.abs(year - releaseYear) <= PUBLICATION_YEAR_TOLERANCE)
-  const isSameTmdbFilm = item.tmdbId === null || item.tmdbId === film.tmdbId
-  const isDirectedAlike =
-    item.directors.length === 0 ||
-    film.directors.length === 0 ||
-    item.directors.some((director) => film.directors.some((name) => titlesMatch(director, name)))
+  const isSameTmdbFilm = item.tmdbId === film.tmdbId
+  const isDirectedAlike = item.directors.some((director) =>
+    film.directors.some((name) => titlesMatch(director, name)),
+  )
+  const isDatedOtherwise = item.years.length > 0 && releaseYear !== null && !isDatedAlike
+  const isOtherTmdbFilm = item.tmdbId !== null && !isSameTmdbFilm
+  const isDirectedOtherwise =
+    item.directors.length > 0 && film.directors.length > 0 && !isDirectedAlike
+  // A label alone names a shark as readily as a film, so one stated fact must also agree.
+  const hasAgreeingFact = isDatedAlike || isSameTmdbFilm || isDirectedAlike
 
-  return isNamedAlike && isDatedAlike && isSameTmdbFilm && isDirectedAlike
+  return (
+    isNamedAlike &&
+    hasAgreeingFact &&
+    !isDatedOtherwise &&
+    !isOtherTmdbFilm &&
+    !isDirectedOtherwise
+  )
 }
 
 /**

@@ -49,8 +49,12 @@ describe('isSameFilm', () => {
     expect(isSameFilm(item({ years: [2024] }), TANGO)).toBe(false)
   })
 
-  it('accepts an undated item, since an absent date rules nothing out', () => {
-    expect(isSameFilm(item({ years: [] }), TANGO)).toBe(true)
+  it('accepts an undated item when another fact agrees', () => {
+    expect(isSameFilm(item({ years: [], directors: ['Lenka Kny'] }), TANGO)).toBe(true)
+  })
+
+  it('refuses an item that only shares a label, like a shark named Glavonja', () => {
+    expect(isSameFilm(item({ years: [] }), TANGO)).toBe(false)
   })
 
   it('refuses an item stating another TMDB id', () => {
